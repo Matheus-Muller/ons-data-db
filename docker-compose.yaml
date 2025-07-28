@@ -1,0 +1,41 @@
+services:
+  pgdatabase:
+    image: postgres:13
+    container_name: postegres_db_ons
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=ons_db
+    volumes:
+      - "./ons_postgres_data:/var/lib/postgresql/data:rw"
+    ports:
+      - "5432:5432"
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_ons
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    ports:
+      - "8080:80"
+    depends_on:
+      - pgdatabase
+  etl:
+    build: ./etl
+    container_name: etl_script_ons
+    command: python etl_script.py
+    restart: no
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=ons_db
+      - DB_HOST=pgdatabase
+      - DB_PORT=5432
+      - TABLE_NAME=ons_data
+      - API_URL=https://apicarga.ons.org.br/prd/
+      # - START_DATE=2022-01-01
+      # - END_DATE=2025-07-27
+      # - AREA=NE
+    depends_on:
+      - pgdatabase
+    
